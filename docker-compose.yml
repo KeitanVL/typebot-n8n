@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    restart: always
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: typebot
+      POSTGRES_PASSWORD: typebot
+      POSTGRES_DB: typebot
+
+  typebot:
+    image: elestio/typebot-builder:latest
+    restart: always
+    depends_on:
+      - postgres
+    environment:
+      DATABASE_URL: postgresql://typebot:typebot@postgres:5432/typebot
+      NEXTAUTH_URL: https://typebot.n8nautomatic.com
+      NEXT_PUBLIC_VIEWER_URL: https://bot.n8nautomatic.com
+      ENCRYPTION_SECRET: zsiggwWqI2je+teb1R0JE9OHiCwev04Xaa
+    env_file:
+      - .env
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.typebot.rule=Host(`typebot.n8nautomatic.com`)"
+      - "traefik.http.routers.typebot.entrypoints=websecure"
+      - "traefik.http.routers.typebot.tls.certresolver=myresolver"
+      - "traefik.http.services.typebot.loadbalancer.server.port=3000"
+
+volumes:
+  pgdata:
